@@ -465,6 +465,121 @@ header {
   .job-meta { gap: 12px; }
   .modal { padding: 20px; }
 }
+
+/* DAILY REMINDER POPUP */
+.reminder-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45,31,61,0.45);
+  backdrop-filter: blur(6px);
+  z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
+}
+.reminder-overlay.hidden { display: none; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.reminder-box {
+  background: #fff;
+  border: 1.5px solid var(--border-hover);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%; max-width: 460px;
+  box-shadow: 0 20px 60px rgba(185,79,255,0.18);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.reminder-date {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.reminder-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-size: 26px;
+  color: var(--text); margin-bottom: 20px; line-height: 1.2;
+}
+
+.reminder-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+.reminder-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.reminder-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(185,79,255,0.04);
+  border: 1.5px solid var(--border);
+}
+.reminder-item.today-item { background: rgba(255,79,123,0.05); border-color: rgba(255,79,123,0.2); }
+.reminder-item.overdue-item { background: rgba(255,79,123,0.08); border-color: rgba(255,79,123,0.3); }
+.ri-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ri-dot.red { background: var(--red); }
+.ri-dot.orange { background: var(--orange); }
+.ri-dot.yellow { background: var(--yellow); }
+.ri-dot.green { background: var(--green); }
+.ri-brand { font-size: 13px; font-weight: 600; flex: 1; color: var(--text); }
+.ri-date { font-size: 11px; color: var(--muted); }
+.ri-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px;
+}
+.ri-badge.today { background: rgba(255,79,123,0.12); color: var(--red); }
+.ri-badge.overdue { background: rgba(255,79,123,0.15); color: var(--red); }
+.ri-badge.soon { background: rgba(255,179,0,0.12); color: var(--yellow); }
+
+.reminder-empty {
+  text-align: center; padding: 20px;
+  color: var(--muted); font-size: 13px;
+}
+.reminder-empty span { font-size: 24px; display: block; margin-bottom: 8px; }
+
+.reminder-actions { display: flex; gap: 8px; margin-top: 4px; }
+.btn-remind-close {
+  flex: 1; padding: 11px;
+  background: rgba(185,79,255,0.07);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-remind-close:hover { border-color: var(--accent); color: var(--accent); }
+.btn-remind-dismiss {
+  flex: 1; padding: 11px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: white; cursor: pointer;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(185,79,255,0.25);
+}
+.btn-remind-dismiss:hover { opacity: 0.9; }
+
+/* HASHTAG ROW */
+.hashtag-row {
+  margin-top: 10px;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px;
+  background: rgba(61,158,255,0.04);
+  border-radius: 9px;
+  border: 1.5px solid rgba(61,158,255,0.15);
+}
+.hashtag-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.hashtag-text { flex: 1; font-size: 12px; color: #0077e6; font-weight: 500; line-height: 1.5; word-break: break-word; }
+.hashtag-copy {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  padding: 4px 10px; border-radius: 20px;
+  background: rgba(61,158,255,0.1); color: #0077e6;
+  border: 1px solid rgba(61,158,255,0.2);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.hashtag-copy:hover { background: #3d9eff; color: white; border-color: #3d9eff; }
+.hashtag-copy.copied { background: rgba(0,200,150,0.1); color: var(--green); border-color: rgba(0,200,150,0.3); }
 </style>
 </head>
 <body>
@@ -511,6 +626,20 @@ header {
   </div>
   <div class="payment-list" id="payment-container">
     <div class="loading"><div class="spinner"></div>Loading...</div>
+  </div>
+</div>
+
+<!-- DAILY REMINDER -->
+<div class="reminder-overlay hidden" id="reminderOverlay">
+  <div class="reminder-box">
+    <div class="reminder-date" id="reminderDate"></div>
+    <div class="reminder-title">今天有什么需要做？ ✦</div>
+    <div class="reminder-section-label" id="reminderLabel">近 5 天 Due</div>
+    <div class="reminder-items" id="reminderItems"></div>
+    <div class="reminder-actions">
+      <button class="btn-remind-close" onclick="closeReminder('today')">今天不再显示</button>
+      <button class="btn-remind-dismiss" onclick="closeReminder('ok')">知道了</button>
+    </div>
   </div>
 </div>
 
@@ -565,6 +694,10 @@ header {
       <div class="form-group full">
         <label>Notes 备注</label>
         <textarea id="f-notes" placeholder="任何备注..."></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Hashtags / Tags 品牌规定</label>
+        <input type="text" id="f-hashtags" placeholder="@brand #hashtag1 #hashtag2">
       </div>
     </div>
     <div class="modal-footer">
@@ -760,6 +893,7 @@ function openModal(job=null) {
   document.getElementById('f-amount').value = job?.payment_amount||'';
   document.getElementById('f-paystatus').value = job?.payment_status||'Pending';
   document.getElementById('f-notes').value = job?.notes||'';
+  document.getElementById('f-hashtags').value = job?.hashtags||'';
   document.getElementById('modal').classList.add('open');
 }
 function openEdit(id) { openModal(allJobs.find(j=>j.id===id)); }
@@ -779,6 +913,7 @@ async function saveJob() {
     payment_amount: document.getElementById('f-amount').value?parseFloat(document.getElementById('f-amount').value):null,
     payment_status: document.getElementById('f-paystatus').value,
     notes: document.getElementById('f-notes').value.trim()||null,
+    hashtags: document.getElementById('f-hashtags').value.trim()||null,
     completed: false
   };
   try {
@@ -796,7 +931,90 @@ function showToast(msg,type='') {
 }
 
 document.getElementById('today-date').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-loadJobs();
+
+// HASHTAG COPY
+function copyHashtag(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// DAILY REMINDER
+function showReminder() {
+  const TODAY_KEY = 'coco_reminder_today';
+  const HIDE_UNTIL_KEY = 'coco_reminder_hide_until';
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const hideUntil = localStorage.getItem(HIDE_UNTIL_KEY);
+  // "今天不再显示" hides until today 12:00 next occurrence or next day 00:00
+  if (hideUntil && new Date() < new Date(hideUntil)) return;
+
+  const upcoming = [...allJobs].filter(j => {
+    const d = daysUntil(j.post_due);
+    return d !== null && d <= 5;
+  }).sort((a,b) => daysUntil(a.post_due) - daysUntil(b.post_due));
+
+  document.getElementById('reminderDate').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const container = document.getElementById('reminderItems');
+  const label = document.getElementById('reminderLabel');
+
+  if (!upcoming.length) {
+    container.innerHTML = `<div class="reminder-empty"><span>🎉</span>近 5 天没有 due！</div>`;
+    label.textContent = '近 5 天 Due';
+  } else {
+    label.textContent = `近 5 天 Due · ${upcoming.length} 个`;
+    container.innerHTML = upcoming.map(j => {
+      const d = daysUntil(j.post_due);
+      let dotCls, badgeText, badgeCls, itemCls = '';
+      if (d < 0) { dotCls='red'; badgeText=Math.abs(d)+'d overdue'; badgeCls='overdue'; itemCls='overdue-item'; }
+      else if (d === 0) { dotCls='red'; badgeText='Today!'; badgeCls='today'; itemCls='today-item'; }
+      else if (d <= 2) { dotCls='orange'; badgeText='in '+d+'d'; badgeCls='soon'; }
+      else { dotCls='yellow'; badgeText='in '+d+'d'; badgeCls='soon'; }
+      return `<div class="reminder-item ${itemCls}">
+        <div class="ri-dot ${dotCls}"></div>
+        <div class="ri-brand">${j.brand}</div>
+        <div class="ri-date">${fmt(j.post_due)}</div>
+        <span class="ri-badge ${badgeCls}">${badgeText}</span>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('reminderOverlay').classList.remove('hidden');
+}
+
+function closeReminder(action) {
+  if (action === 'today') {
+    // Hide until tomorrow 00:00
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    localStorage.setItem('coco_reminder_hide_until', tomorrow.toISOString());
+  }
+  // 'ok' = just close, will show again next time they open (or after 12:00 refresh)
+  document.getElementById('reminderOverlay').classList.add('hidden');
+}
+
+// Auto-refresh reminder at 12:00 every day
+function scheduleNoonRefresh() {
+  const now = new Date();
+  const noon = new Date(now);
+  noon.setHours(12, 0, 0, 0);
+  if (now >= noon) noon.setDate(noon.getDate() + 1); // next noon if past today's
+  const msUntilNoon = noon - now;
+  setTimeout(() => {
+    // Clear any hide-until if it's past, then show reminder
+    const hideUntil = localStorage.getItem('coco_reminder_hide_until');
+    if (!hideUntil || new Date() >= new Date(hideUntil)) {
+      showReminder();
+    }
+    scheduleNoonRefresh(); // reschedule for next day
+  }, msUntilNoon);
+}
+
+loadJobs().then(() => { showReminder(); scheduleNoonRefresh(); });
 </script>
 </body>
 </html>
