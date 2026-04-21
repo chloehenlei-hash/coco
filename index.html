@@ -235,6 +235,107 @@ header {
   border-left: 2px solid rgba(185,79,255,0.2);
 }
 
+/* SECTION HEADERS */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 40px 0 16px;
+}
+.section-header h2 {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.section-divider {
+  flex: 1;
+  height: 1.5px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.section-count {
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(185,79,255,0.07);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* PAYMENT CARDS */
+.pay-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(185,79,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.pay-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--yellow);
+  border-radius: 3px 0 0 3px;
+}
+.pay-card:hover { background: var(--card-hover); border-color: var(--border-hover); }
+.pay-card.pay-completed-card { opacity: 0.45; }
+.pay-card.pay-completed-card::before { background: var(--green); }
+.pay-card.pay-overdue-card::before { background: var(--red); }
+
+.pay-check {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(0,200,150,0.35);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.pay-check:hover { border-color: var(--green); background: rgba(0,200,150,0.08); }
+.pay-check.checked { background: var(--green); border-color: var(--green); }
+.pay-check.checked::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+
+.pay-info { flex: 1; min-width: 0; }
+.pay-brand { font-size: 15px; font-weight: 600; color: var(--text); }
+.pay-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pay-amount {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--accent);
+  font-weight: 400;
+  flex-shrink: 0;
+}
+.pay-amount.muted-amt { color: var(--muted); font-size: 14px; font-style: normal; font-family: 'DM Sans', sans-serif; }
+
+.pay-status-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.psb-Pending { color: var(--muted); background: rgba(155,127,192,0.08); border: 1px solid rgba(155,127,192,0.2); }
+.psb-InProgress { color: #c47f00; background: rgba(255,179,0,0.1); border: 1px solid rgba(255,179,0,0.3); }
+.psb-Completed { color: #00a06e; background: rgba(0,200,150,0.1); border: 1px solid rgba(0,200,150,0.3); }
+.psb-Overdue { color: #d4004a; background: rgba(255,79,123,0.1); border: 1px solid rgba(255,79,123,0.3); }
+
+.payment-list { display: flex; flex-direction: column; gap: 8px; }
+
 .empty {
   text-align: center;
   padding: 80px 20px;
@@ -394,8 +495,22 @@ header {
     <button class="filter-btn" onclick="setFilter('TT',this)">TT</button>
   </div>
 
+  <div class="section-header">
+    <h2>✦ Active Jobs</h2>
+    <div class="section-divider"></div>
+    <span class="section-count" id="active-count">—</span>
+  </div>
   <div id="jobs-container">
     <div class="loading"><div class="spinner"></div>Loading jobs...</div>
+  </div>
+
+  <div class="section-header" style="margin-top:48px">
+    <h2>💰 Payment Watch</h2>
+    <div class="section-divider"></div>
+    <span class="section-count" id="pay-count">—</span>
+  </div>
+  <div class="payment-list" id="payment-container">
+    <div class="loading"><div class="spinner"></div>Loading...</div>
   </div>
 </div>
 
@@ -471,7 +586,7 @@ const H = {
   'Prefer': 'return=representation'
 };
 
-let allJobs = [], currentFilter = 'all', editingId = null;
+let allJobs = [], allPayments = [], currentFilter = 'all', editingId = null;
 const today = new Date(); today.setHours(0,0,0,0);
 
 function daysUntil(d) {
@@ -507,8 +622,10 @@ async function api(method, path, body) {
 
 async function loadJobs() {
   try {
-    allJobs = await api('GET','jobs?completed=eq.false&order=post_due.asc.nullslast');
-    render(); stats();
+    const all = await api('GET','jobs?completed=eq.false&order=post_due.asc.nullslast');
+    allJobs = all.filter(j => !j.is_payment);
+    allPayments = all.filter(j => j.is_payment);
+    render(); renderPayments(); stats();
   } catch(e) {
     document.getElementById('jobs-container').innerHTML = `<div class="empty"><div class="empty-icon">⚠</div><h3>Connection error</h3><p>${e.message}</p></div>`;
   }
@@ -518,7 +635,55 @@ function stats() {
   document.getElementById('stat-total').textContent = allJobs.length;
   document.getElementById('stat-overdue').textContent = allJobs.filter(j=>daysUntil(j.post_due)<0).length;
   document.getElementById('stat-urgent').textContent = allJobs.filter(j=>{const d=daysUntil(j.post_due);return d!==null&&d>=0&&d<=7;}).length;
-  document.getElementById('stat-unpaid').textContent = allJobs.filter(j=>j.payment_status!=='Completed').length;
+  document.getElementById('stat-unpaid').textContent = allPayments.filter(j=>j.payment_status!=='Completed').length;
+  document.getElementById('active-count').textContent = allJobs.length + ' jobs';
+  document.getElementById('pay-count').textContent = allPayments.filter(j=>j.payment_status!=='Completed').length + ' pending';
+}
+
+function renderPayments() {
+  const c = document.getElementById('payment-container');
+  if (!allPayments.length) {
+    c.innerHTML = `<div class="empty" style="padding:32px"><div class="empty-icon" style="font-size:28px">✦</div><p>No payment items.</p></div>`;
+    return;
+  }
+  // Sort: unpaid first, completed last
+  const sorted = [...allPayments].sort((a,b) => {
+    const order = {Overdue:0, InProgress:1, Pending:2, Completed:3};
+    return (order[a.payment_status]||2) - (order[b.payment_status]||2);
+  });
+  c.innerHTML = sorted.map(j => {
+    const ps = j.payment_status || 'Pending';
+    const cardCls = ps === 'Completed' ? 'pay-completed-card' : ps === 'Overdue' ? 'pay-overdue-card' : '';
+    const psbCls = `psb-${ps.replace(' ','')}`;
+    const hasAmt = j.payment_amount && Number(j.payment_amount) > 0;
+    return `<div class="pay-card ${cardCls}" id="payjob-${j.id}">
+      <div class="pay-check ${ps==='Completed'?'checked':''}" onclick="completePayment(${j.id}, '${ps}')">
+        ${ps==='Completed'?'<span style=\"color:white;font-size:11px;font-weight:700\">✓</span>':''}
+      </div>
+      <div class="pay-info">
+        <div class="pay-brand">${j.brief_url?`<a href="${j.brief_url}" target="_blank" style="color:inherit;text-decoration:none">${j.brand}</a>`:j.brand}</div>
+        ${j.notes?`<div class="pay-desc">${j.notes}</div>`:''}
+      </div>
+      ${hasAmt
+        ? `<div class="pay-amount">RM ${Number(j.payment_amount).toLocaleString('en-MY',{minimumFractionDigits:0})}</div>`
+        : `<div class="pay-amount muted-amt">Follow Agmt</div>`
+      }
+      <span class="pay-status-badge ${psbCls}">${ps.replace('InProgress','In Progress')}</span>
+      <div class="job-actions">
+        <button class="job-btn" onclick="openEdit(${j.id})">✎</button>
+        <button class="job-btn delete" onclick="confirmDelete(${j.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function completePayment(id, currentStatus) {
+  const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
+  try {
+    await api('PATCH', `jobs?id=eq.${id}`, {payment_status: newStatus});
+    showToast(newStatus === 'Completed' ? '💰 Payment marked done!' : 'Reverted', 'success');
+    loadJobs();
+  } catch { showToast('Error','error'); }
 }
 
 function render() {
