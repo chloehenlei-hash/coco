@@ -1083,12 +1083,12 @@ const PWD_KEY = 'coco_auth_v2';
 const CORRECT = 'coco';
 
 function checkPwd() {
-  const val = document.getElementById('pwdInput').value;
+  const val = document.getElementById('pwdInput').value.trim();
   const input = document.getElementById('pwdInput');
   const err = document.getElementById('pwdError');
   if (val === CORRECT) {
     localStorage.setItem(PWD_KEY, 'true');
-    document.getElementById('pwdOverlay').classList.add('hidden');
+    document.getElementById('pwdOverlay').style.display = 'none';
     err.textContent = '';
     input.classList.remove('error');
   } else {
@@ -1107,12 +1107,15 @@ function togglePwdVis() {
 }
 
 // Check auth on load
-if (localStorage.getItem(PWD_KEY) === 'true') {
-  document.getElementById('pwdOverlay').classList.add('hidden');
-} else {
-  // Focus input
-  setTimeout(() => document.getElementById('pwdInput').focus(), 100);
-}
+(function() {
+  const overlay = document.getElementById('pwdOverlay');
+  if (localStorage.getItem(PWD_KEY) === 'true') {
+    overlay.classList.add('hidden');
+  } else {
+    overlay.classList.remove('hidden');
+    setTimeout(() => document.getElementById('pwdInput').focus(), 150);
+  }
+})();
 
 document.getElementById('today-date').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
