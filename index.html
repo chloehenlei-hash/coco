@@ -985,8 +985,7 @@ function render() {
         <div class="job-check" onclick="completeJob(${j.id})"></div>
         <div class="job-brand">${j.brand}</div>
         <span class="content-type ct-${j.content_type||'OTHER'}">${j.content_type||'—'}</span>
-        ${j.brief_url ? `<a class="brief-btn" href="${j.brief_url}" target="_blank">📋 Brief</a>` : j.brief_text ? `<button class="brief-btn" onclick="openBriefModal('${j.brand.replace(/'/g,"\\'")}', this)" data-brief="${j.brief_text.replace(/"/g,'&quot;').replace(/
-/g,'\\n')}">📋 Brief</button>` : ''}
+        ${j.brief_url ? `<a class="brief-btn" href="${j.brief_url}" target="_blank">📋 Brief</a>` : (j.brief_text ? `<button class="brief-btn" onclick="openBriefModal(${j.id})">📋 Brief</button>` : '')}
         <span class="payment-badge ${payCls}">${(j.payment_status||'Pending').replace('InProgress','In Progress')}</span>
         <div class="job-actions">
           <button class="job-btn" onclick="openEdit(${j.id})">✎</button>
@@ -1120,10 +1119,11 @@ function togglePwdVis() {
 document.getElementById('today-date').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
 // BRIEF MODAL
-function openBriefModal(brand, btn) {
-  const text = btn.getAttribute('data-brief').replace(/\\n/g, '\n');
-  document.getElementById('briefModalTitle').textContent = brand + ' — Brief';
-  document.getElementById('briefModalContent').textContent = text;
+function openBriefModal(id) {
+  const job = allJobs.find(j => j.id === id);
+  if (!job) return;
+  document.getElementById('briefModalTitle').textContent = job.brand + ' — Brief';
+  document.getElementById('briefModalContent').textContent = job.brief_text || '';
   document.getElementById('briefModal').classList.add('open');
 }
 function closeBriefModal() {
