@@ -647,6 +647,64 @@ header {
 }
 .pwd-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 .pwd-btn:active { transform: translateY(0); }
+
+/* BRIEF BUTTON */
+.brief-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; text-decoration: none;
+  padding: 4px 10px; border-radius: 20px;
+  background: rgba(61,158,255,0.08); color: #0077e6;
+  border: 1px solid rgba(61,158,255,0.25);
+  transition: all 0.15s; flex-shrink: 0; white-space: nowrap;
+}
+.brief-btn:hover { background: #3d9eff; color: white; border-color: #3d9eff; }
+
+/* BRIEF MODAL */
+.brief-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45,31,61,0.5);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.brief-modal-overlay.open { opacity: 1; pointer-events: all; }
+.brief-modal {
+  background: #fff;
+  border: 1.5px solid var(--border-hover);
+  border-radius: 18px;
+  width: 100%; max-width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(185,79,255,0.15);
+  transform: translateY(10px);
+  transition: transform 0.2s;
+}
+.brief-modal-overlay.open .brief-modal { transform: translateY(0); }
+.brief-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.brief-modal-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-size: 22px; color: var(--text);
+}
+.brief-modal-close {
+  background: transparent; border: 1.5px solid var(--border);
+  width: 32px; height: 32px; border-radius: 8px;
+  cursor: pointer; font-size: 14px; color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.brief-modal-close:hover { border-color: var(--red); color: var(--red); }
+.brief-modal-content {
+  font-size: 13.5px; color: var(--text); line-height: 1.75;
+  white-space: pre-wrap; word-break: break-word;
+}
 </style>
 </head>
 <body>
@@ -747,6 +805,10 @@ header {
       <div class="form-group">
         <label>Brief URL</label>
         <input type="url" id="f-brief" placeholder="https://...">
+      </div>
+      <div class="form-group full">
+        <label>Brief Text （没有链接时用）</label>
+        <textarea id="f-brief-text" placeholder="把 brief 内容贴在这里..." style="min-height:100px"></textarea>
       </div>
       <div class="form-group">
         <label>Storyline Due</label>
@@ -921,8 +983,10 @@ function render() {
     return `<div class="job-card ${cc}" id="job-${j.id}">
       <div class="job-top">
         <div class="job-check" onclick="completeJob(${j.id})"></div>
-        <div class="job-brand">${j.brief_url?`<a href="${j.brief_url}" target="_blank">${j.brand}</a>`:j.brand}</div>
+        <div class="job-brand">${j.brand}</div>
         <span class="content-type ct-${j.content_type||'OTHER'}">${j.content_type||'—'}</span>
+        ${j.brief_url ? `<a class="brief-btn" href="${j.brief_url}" target="_blank">📋 Brief</a>` : j.brief_text ? `<button class="brief-btn" onclick="openBriefModal('${j.brand.replace(/'/g,"\\'")}', this)" data-brief="${j.brief_text.replace(/"/g,'&quot;').replace(/
+/g,'\\n')}">📋 Brief</button>` : ''}
         <span class="payment-badge ${payCls}">${(j.payment_status||'Pending').replace('InProgress','In Progress')}</span>
         <div class="job-actions">
           <button class="job-btn" onclick="openEdit(${j.id})">✎</button>
@@ -969,6 +1033,7 @@ function openModal(job=null) {
   document.getElementById('f-brand').value = job?.brand||'';
   document.getElementById('f-type').value = job?.content_type||'IGR';
   document.getElementById('f-brief').value = job?.brief_url||'';
+  document.getElementById('f-brief-text').value = job?.brief_text||'';
   document.getElementById('f-storyline').value = job?.storyline_due||'';
   document.getElementById('f-draft').value = job?.draft_due||'';
   document.getElementById('f-post').value = job?.post_due||'';
@@ -989,6 +1054,7 @@ async function saveJob() {
     brand,
     content_type: document.getElementById('f-type').value,
     brief_url: document.getElementById('f-brief').value.trim()||null,
+    brief_text: document.getElementById('f-brief-text').value.trim()||null,
     storyline_due: document.getElementById('f-storyline').value||null,
     draft_due: document.getElementById('f-draft').value||null,
     post_due: document.getElementById('f-post').value||null,
@@ -1049,6 +1115,20 @@ if (localStorage.getItem(PWD_KEY) === 'true') {
 }
 
 document.getElementById('today-date').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+// BRIEF MODAL
+function openBriefModal(brand, btn) {
+  const text = btn.getAttribute('data-brief').replace(/\\n/g, '\n');
+  document.getElementById('briefModalTitle').textContent = brand + ' — Brief';
+  document.getElementById('briefModalContent').textContent = text;
+  document.getElementById('briefModal').classList.add('open');
+}
+function closeBriefModal() {
+  document.getElementById('briefModal').classList.remove('open');
+}
+function handleBriefOverlay(e) {
+  if (e.target === document.getElementById('briefModal')) closeBriefModal();
+}
 
 // HASHTAG COPY
 function copyHashtag(btn, text) {
@@ -1134,5 +1214,16 @@ function scheduleNoonRefresh() {
 
 loadJobs().then(() => { showReminder(); scheduleNoonRefresh(); });
 </script>
+
+<!-- BRIEF TEXT MODAL -->
+<div class="brief-modal-overlay" id="briefModal" onclick="handleBriefOverlay(event)">
+  <div class="brief-modal">
+    <div class="brief-modal-header">
+      <div class="brief-modal-title" id="briefModalTitle">Brief</div>
+      <button class="brief-modal-close" onclick="closeBriefModal()">✕</button>
+    </div>
+    <div class="brief-modal-content" id="briefModalContent"></div>
+  </div>
+</div>
 </body>
 </html>
