@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -581,72 +582,6 @@ header {
 .hashtag-copy:hover { background: #3d9eff; color: white; border-color: #3d9eff; }
 .hashtag-copy.copied { background: rgba(0,200,150,0.1); color: var(--green); border-color: rgba(0,200,150,0.3); }
 
-/* PASSWORD SCREEN */
-.pwd-overlay {
-  position: fixed; inset: 0;
-  background: var(--bg);
-  background-image: 
-    radial-gradient(ellipse 70% 40% at 20% 0%, rgba(255,95,160,0.08), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(185,79,255,0.08), transparent);
-  z-index: 999;
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.pwd-overlay.hidden { display: none; }
-.pwd-box {
-  background: #fff;
-  border: 1.5px solid var(--border-hover);
-  border-radius: 24px;
-  padding: 40px 36px;
-  width: 100%; max-width: 380px;
-  box-shadow: 0 20px 60px rgba(185,79,255,0.15);
-  text-align: center;
-  animation: slideUp 0.3s ease;
-}
-.pwd-icon { font-size: 36px; margin-bottom: 16px; }
-.pwd-title {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 28px;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-.pwd-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-.pwd-input-wrap { position: relative; margin-bottom: 12px; }
-.pwd-input {
-  width: 100%;
-  background: rgba(185,79,255,0.04);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 13px 44px 13px 16px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.15s;
-  letter-spacing: 0.05em;
-}
-.pwd-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(185,79,255,0.1); }
-.pwd-input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,79,123,0.1); }
-.pwd-toggle {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer;
-  font-size: 16px; color: var(--muted); padding: 0;
-}
-.pwd-error { font-size: 12px; color: var(--red); margin-bottom: 12px; min-height: 18px; }
-.pwd-btn {
-  width: 100%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border: none; border-radius: 12px;
-  padding: 13px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px; font-weight: 600;
-  color: white; cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-  box-shadow: 0 4px 18px rgba(185,79,255,0.3);
-}
-.pwd-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-.pwd-btn:active { transform: translateY(0); }
 
 /* BRIEF BUTTON */
 .brief-btn {
@@ -708,21 +643,6 @@ header {
 </style>
 </head>
 <body>
-<!-- PASSWORD SCREEN -->
-<div class="pwd-overlay" id="pwdOverlay">
-  <div class="pwd-box">
-    <div class="pwd-icon">✦</div>
-    <div class="pwd-title">Coco's Dashboard</div>
-    <div class="pwd-sub">Enter password to continue</div>
-    <div class="pwd-input-wrap">
-      <input class="pwd-input" id="pwdInput" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') checkPwd()">
-      <button class="pwd-toggle" onclick="togglePwdVis()" id="pwdToggle">👁</button>
-    </div>
-    <div class="pwd-error" id="pwdError"></div>
-    <button class="pwd-btn" onclick="checkPwd()">Enter →</button>
-  </div>
-</div>
-
 <div class="wrap">
   <header>
     <div class="header-left">
@@ -1077,44 +997,6 @@ function showToast(msg,type='') {
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 
-// PASSWORD
-const PWD_KEY = 'coco_auth_v2';
-const CORRECT = 'coco';
-
-function checkPwd() {
-  const val = document.getElementById('pwdInput').value.trim();
-  const input = document.getElementById('pwdInput');
-  const err = document.getElementById('pwdError');
-  if (val === CORRECT) {
-    localStorage.setItem(PWD_KEY, 'true');
-    document.getElementById('pwdOverlay').style.display = 'none';
-    err.textContent = '';
-    input.classList.remove('error');
-  } else {
-    input.classList.add('error');
-    err.textContent = 'Wrong password, try again 🙈';
-    input.value = '';
-    input.focus();
-  }
-}
-
-function togglePwdVis() {
-  const input = document.getElementById('pwdInput');
-  const btn = document.getElementById('pwdToggle');
-  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-  else { input.type = 'password'; btn.textContent = '👁'; }
-}
-
-// Check auth on load
-(function() {
-  const overlay = document.getElementById('pwdOverlay');
-  if (localStorage.getItem(PWD_KEY) === 'true') {
-    overlay.classList.add('hidden');
-  } else {
-    overlay.classList.remove('hidden');
-    setTimeout(() => document.getElementById('pwdInput').focus(), 150);
-  }
-})();
 
 document.getElementById('today-date').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
