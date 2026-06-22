@@ -96,6 +96,7 @@ const SUMMARY_KEY="coco_month_summary_v1";
 const SUMMARY_MONTH_KEY="coco_month_summary_months_v1";
 const RECEIVED_ITEMS_KEY="coco_received_items_v1";
 const DELETED_ITEMS_KEY="coco_deleted_items_v1";
+const RESTORE_DELETED_PREFIXES=["sony|completed job|"];
 const STATUS_UPDATES=[
   {match:"Hada Labo",notes:"Draft submitted · Post 2026-06-03",completed:false},
   {match:"Rejuran",notes:"Draft submitted · Post 2026-06-06 · Payment within 30 business days from posting",completed:false},
@@ -130,7 +131,7 @@ function itemKey(j){return j.edit_key||[j.brand,j.campaign,j.post_due,j.content_
 function editOverrides(){try{return JSON.parse(localStorage.getItem(EDIT_OVERRIDES_KEY)||"{}")}catch(e){return{}}}
 function saveEditOverride(key,updates){const o=editOverrides();o[key]={...updates,edit_key:key};localStorage.setItem(EDIT_OVERRIDES_KEY,JSON.stringify(o))}
 function applyEditOverrides(data){const o=editOverrides();return data.map(j=>o[itemKey(j)]?normalize({...j,...o[itemKey(j)],edit_key:itemKey(j)},j.id):j)}
-function deletedKeys(){try{return JSON.parse(localStorage.getItem(DELETED_ITEMS_KEY)||"[]")}catch(e){return[]}}
+function deletedKeys(){try{const keys=JSON.parse(localStorage.getItem(DELETED_ITEMS_KEY)||"[]"),restored=keys.filter(k=>!RESTORE_DELETED_PREFIXES.some(p=>String(k).toLowerCase().startsWith(p)));if(restored.length!==keys.length)localStorage.setItem(DELETED_ITEMS_KEY,JSON.stringify(restored));return restored}catch(e){return[]}}
 function saveDeletedKey(key){const keys=[...new Set(deletedKeys().concat(key))];localStorage.setItem(DELETED_ITEMS_KEY,JSON.stringify(keys))}
 function removeDeletedItems(data){const keys=new Set(deletedKeys());return data.filter(j=>!keys.has(itemKey(j)))}
 function applyUpdates(data){return data.map(j=>{const key=`${j.brand} ${j.campaign}`.toLowerCase();const u=STATUS_UPDATES.find(x=>x.match.split("|").every(m=>key.includes(m.toLowerCase())));if(!u)return j;return{...j,notes:u.notes,completed:u.completed,invoice_status:u.invoice_status||j.invoice_status}})}
