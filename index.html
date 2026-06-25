@@ -101,6 +101,8 @@ const SUMMARY_KEY="coco_month_summary_v1";
 const SUMMARY_MONTH_KEY="coco_month_summary_months_v1";
 const RECEIVED_ITEMS_KEY="coco_received_items_v1";
 const DELETED_ITEMS_KEY="coco_deleted_items_v1";
+const APP_VERSION_KEY="coco_job_list_app_version";
+const APP_VERSION="2026-06-25-june-summary-v2";
 const SYNC_STORAGE_KEYS=[LOCAL_JOBS_KEY,EDIT_OVERRIDES_KEY,SUMMARY_KEY,SUMMARY_MONTH_KEY,RECEIVED_ITEMS_KEY,DELETED_ITEMS_KEY];
 const RESTORE_DELETED_PREFIXES=["sony|completed job|"];
 const STATUS_UPDATES=[
@@ -112,18 +114,21 @@ const STATUS_UPDATES=[
 ];
 const MANUAL_PAYMENT_WATCH=[
   {brand:"VIVAIA",campaign:"",payment_amount:"10000",payment_status:"Pending",notes:"Payment not received",is_payment:true},
-  {brand:"PROYA",campaign:"",payment_amount:"47000",payment_status:"Pending",notes:"Payment not received",is_payment:true}
+  {brand:"PROYA",campaign:"",payment_amount:"47000",payment_status:"Pending",notes:"Payment not received",is_payment:true},
+  {brand:"25.6 Dasher event @ Chers Salon 4pm-7pm",campaign:"",content_type:"IGR + IGS",deliverables:"IGR + IGS",payment_amount:"15000",payment_status:"Pending",notes:"Soft light tones — think cream blush champagne or sage",is_payment:false}
 ];
 const ENDORSEMENTS=[
   {brand:"Love Maya",term:"1-year endorsement · quarterly",receivedLabel:"Q1 paid",receivedAmount:"RM 20,000",nextLabel:"Q2 due after Jun",nextAmount:"RM 20,000",note:"Waiting Q2 payment in Jul"},
   {brand:"Consmy",term:"1-year endorsement · quarterly",receivedLabel:"Q1 + Q2 paid",receivedAmount:"RM 57,500",nextLabel:"Q3 next",nextAmount:"RM 28,750",note:"Fixed quarterly fee"}
 ];
 const SUMMARY_DEFAULTS={
-  received:{title:"Money Received This Month",sub:"May 2026",matches:["love maya","jisulife"]},
-  deals:{title:"Deals Closed This Month",sub:"June 2026",matches:["kerastase","ulike","kiehl","gentle monster"]}
+  received:{title:"Money Received This Month",sub:"June 2026",matches:["rejuran","returnity","sony","dasher"]},
+  deals:{title:"Deals Closed This Month",sub:"June 2026",matches:["kerastase","dasher"]}
 };
+migrateLocalState();
 document.querySelector("#today").textContent=today.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 function csv(text){const rows=[];let row=[],cell="",q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c=='"'&&q&&n=='"'){cell+='"';i++}else if(c=='"')q=!q;else if(c==","&&!q){row.push(cell);cell=""}else if((c=="\n"||c=="\r")&&!q){if(c=="\r"&&n=="\n")i++;row.push(cell);rows.push(row);row=[];cell=""}else cell+=c}if(cell||row.length){row.push(cell);rows.push(row)}return rows.filter(r=>r.some(v=>String(v).trim()))}
+function migrateLocalState(){try{if(localStorage.getItem(APP_VERSION_KEY)===APP_VERSION)return;localStorage.removeItem(SUMMARY_KEY);localStorage.removeItem(SUMMARY_MONTH_KEY);localStorage.removeItem(RECEIVED_ITEMS_KEY);localStorage.setItem(APP_VERSION_KEY,APP_VERSION)}catch(e){}}
 function bool(v){return["true","yes","1","done","completed"].includes(String(v||"").trim().toLowerCase())}
 function dateDiff(d){if(!d)return null;const x=new Date(d);if(Number.isNaN(+x))return null;x.setHours(0,0,0,0);return Math.round((x-today)/86400000)}
 function fmt(d){if(!d)return "-";const x=new Date(d);return Number.isNaN(+x)?d:x.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}
